@@ -5,18 +5,14 @@ import socket from '../utitils/socket';
 import {Image, Platform, StyleSheet} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FullScreenLoader from '../components/FullScreenLoader';
-import {jsonToFormdata, vh, vw} from '../utitils/theme';
+import {vh, vw} from '../utitils/theme';
 import AttachmentSelectionModal from './ChatComponents/AttachmentSelectionModal';
 import Recorder from './ChatComponents/Recoeder';
-import AudioRecorderPlayer, {
-  AudioEncoderAndroidType,
-  AudioSourceAndroidType,
-  AVModeIOSOption,
-  AVEncoderAudioQualityIOSType,
-  AVEncodingOption,
-} from 'react-native-audio-recorder-player';
+import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import RNFetchBlob from 'rn-fetch-blob';
 import RNFS from 'react-native-fs';
+import {post} from '../api/fetchHelpers';
+import {endpoints} from '../api/config';
 const Messages = ({route}) => {
   const [messages, setMessages] = useState([]);
   const [type, setType] = useState(null);
@@ -67,25 +63,12 @@ const Messages = ({route}) => {
 
     const fileContent = await RNFS.readFile(res, 'base64');
     const fileInfo = await RNFS.stat(res);
-    const vnData = {
-      fileCopyUri: fileInfo?.path,
-      size: fileInfo?.size,
+    const image = {
+      uri: fileInfo?.path,
       type: 'audio/mpeg',
-      name: Math.random() + '.aac',
+      name: 'sound.mp3',
     };
-
-    const _res = await fetch(`http://192.168.8.63:4000/api/general/upload`, {
-      method: 'POST',
-      body: jsonToFormdata(vnData),
-      headers: {
-        Accept: 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        redirect: 'follow',
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    const _jsonRes = await _res.json();
-    console.log('ressssss', _jsonRes);
+    const _res = await post(endpoints.account.uploadImage, {image}, true);
     audioRecorderPlayer.removeRecordBackListener();
     setType(null);
     setDuration(`00:00`);
@@ -95,7 +78,7 @@ const Messages = ({route}) => {
     try {
       setLoading(true);
       const res = await fetch(
-        `http://192.168.8.63:4000/api/room/${roomId}/messages`,
+        `http://192.168.1.65:4000/api/room/${roomId}/messages`,
         {
           method: 'GET',
           headers: {

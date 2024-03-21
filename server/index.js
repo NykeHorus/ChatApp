@@ -4,6 +4,7 @@ const http = require('http').Server(app);
 const cors = require('cors');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const path = require('path');
 
 const uri =
   'mongodb+srv://test:9D2WHgQDV0r353sP@cluster0.68sth1g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
