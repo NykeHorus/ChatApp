@@ -45,14 +45,14 @@ const messageSchema = new mongoose.Schema(
   {
     room_id: String,
     text: String,
+    Media: String,
     user: {
       _id: String,
       name: String,
       avatar: String,
     },
-    createdAt: String,
   },
-  // {timestamps: true},
+  {timestamps: true},
 );
 
 const Message = mongoose.model('Message', messageSchema);
@@ -101,6 +101,7 @@ socketIO.on('connection', socket => {
         id: generateID(),
         name,
         messages: [],
+        attachment: [],
       };
 
       // Save the new room to the MongoDB database

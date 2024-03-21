@@ -69,6 +69,7 @@ const Messages = ({route}) => {
       name: 'sound.mp3',
     };
     const _res = await post(endpoints.account.uploadImage, {image}, true);
+    console.log(_res);
     audioRecorderPlayer.removeRecordBackListener();
     setType(null);
     setDuration(`00:00`);
@@ -160,6 +161,11 @@ const Messages = ({route}) => {
         <Text style={{color: 'black'}}>{props.currentMessage.text}</Text>
       </View>
     );
+  };
+
+  const renderCustomView = props => {
+    const {currentMessage} = props;
+    return console.log(currentMessage);
   };
 
   return (
