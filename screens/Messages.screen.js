@@ -2,7 +2,7 @@ import React, {useState, useCallback, useEffect, useMemo} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {GiftedChat, Actions} from 'react-native-gifted-chat';
 import socket from '../utitils/socket';
-import {Image, Platform, StyleSheet} from 'react-native';
+import {Image, Platform, StyleSheet, View, Text} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FullScreenLoader from '../components/FullScreenLoader';
 import {vh, vw} from '../utitils/theme';
@@ -78,7 +78,7 @@ const Messages = ({route}) => {
     try {
       setLoading(true);
       const res = await fetch(
-        `http://192.168.1.65:4000/api/room/${roomId}/messages`,
+        `http://192.168.2.7:4000/api/room/${roomId}/messages`,
         {
           method: 'GET',
           headers: {
@@ -148,11 +148,27 @@ const Messages = ({route}) => {
     );
   };
 
+  const renderBubble = props => {
+    return (
+      <View
+        style={{
+          backgroundColor: 'white', // Background color of the message bubble
+          borderRadius: 10, // Border radius of the message bubble
+          padding: 10, // Padding inside the message bubble
+          maxWidth: '80%', // Maximum width of the message bubble
+        }}>
+        <Text style={{color: 'black'}}>{props.currentMessage.text}</Text>
+      </View>
+    );
+  };
+
   return (
-    <>
+    <View style={styles.chatScreen}>
       <GiftedChat
         renderUsernameOnMessage
+        renderBubble={renderBubble}
         messages={messages}
+        timeTextStyle={{left: {color: 'white'}, right: {color: 'blue'}}}
         renderActions={renderActions}
         onSend={newMessages => onSend(newMessages)}
         user={{
@@ -170,7 +186,7 @@ const Messages = ({route}) => {
         onPressBackground={() => setShowAttachmentSelectionModal(false)}
         showAttachmentSelection={showAttachmentSelectionModal}
       />
-    </>
+    </View>
   );
 };
 export default Messages;
@@ -180,5 +196,9 @@ const styles = StyleSheet.create({
     height: vh * 3.5,
     width: vw * 8,
     resizeMode: 'contain',
+  },
+  chatScreen: {
+    flex: 1,
+    backgroundColor: '#6e8270', // Change this to the desired background color
   },
 });

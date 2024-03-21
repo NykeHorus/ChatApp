@@ -50,8 +50,9 @@ const messageSchema = new mongoose.Schema(
       name: String,
       avatar: String,
     },
+    createdAt: String,
   },
-  {timestamps: true},
+  // {timestamps: true},
 );
 
 const Message = mongoose.model('Message', messageSchema);

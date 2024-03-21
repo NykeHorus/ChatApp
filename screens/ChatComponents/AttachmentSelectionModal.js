@@ -60,10 +60,11 @@ export default function AttachmentSelectionModal({
                   }}
                   style={styles.attachment}>
                   <Image
-                    style={styles.attahcmentImage}
+                    style={styles.attachmentImage}
                     source={attachment?.image}
                   />
                 </TouchableOpacity>
+                <Text style={styles.attachmentText}>{attachment.name}</Text>
               </View>
             ))}
           </View>
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: vw * 3,
     width: '100%',
     backgroundColor: '#8aa899',
-    height: vh * 20,
+    height: vh * 26,
   },
   attachment: {
     height: vw * 18,
@@ -100,9 +101,13 @@ const styles = StyleSheet.create({
     borderRadius: (vw * 18) / 2,
     backgroundColor: '#ffffff',
   },
-  attahcmentImage: {
+  attachmentImage: {
     width: '40%',
     height: '40%',
     resizeMode: 'contain',
+  },
+  attachmentText: {
+    marginLeft: vw * 3,
+    marginBottom: vw * 1,
   },
 });
