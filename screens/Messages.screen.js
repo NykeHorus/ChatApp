@@ -1,8 +1,15 @@
 import React, {useState, useCallback, useEffect, useMemo} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {GiftedChat, Actions} from 'react-native-gifted-chat';
+import {GiftedChat, Bubble, Actions} from 'react-native-gifted-chat';
 import socket from '../utitils/socket';
-import {Image, Platform, StyleSheet, View, Text} from 'react-native';
+import {
+  Image,
+  Platform,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FullScreenLoader from '../components/FullScreenLoader';
 import {vh, vw} from '../utitils/theme';
@@ -13,6 +20,9 @@ import RNFetchBlob from 'rn-fetch-blob';
 import RNFS from 'react-native-fs';
 import {post} from '../api/fetchHelpers';
 import {endpoints} from '../api/config';
+import Sound from 'react-native-sound';
+import {message} from '../api/APIHelpers';
+
 const Messages = ({route}) => {
   const [messages, setMessages] = useState([]);
   const [type, setType] = useState(null);
@@ -20,6 +30,8 @@ const Messages = ({route}) => {
     useState(false);
   const [loading, setLoading] = useState(false);
   const [duration, setDuration] = useState('00:00');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState(null);
 
   const userName = useMemo(() => AsyncStorage.getItem('username'), []);
 
@@ -52,34 +64,57 @@ const Messages = ({route}) => {
     });
   };
 
-  const onStopRecord = async () => {
-    // const dirs = RNFetchBlob.fs.dirs;
-    // const path = Platform.select({
-    //   ios: 'hello.m4a',
-    //   android: `${dirs.CacheDir}/hello.mp3`,
-    // });
-    // console.log(path);
-    const res = await audioRecorderPlayer.stopRecorder();
+  const uid = () => {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  };
 
-    const fileContent = await RNFS.readFile(res, 'base64');
-    const fileInfo = await RNFS.stat(res);
-    const image = {
-      uri: fileInfo?.path,
-      type: 'audio/mpeg',
-      name: 'sound.mp3',
-    };
-    const _res = await post(endpoints.account.uploadImage, {image}, true);
-    console.log(_res);
-    audioRecorderPlayer.removeRecordBackListener();
-    setType(null);
-    setDuration(`00:00`);
+  const onStopRecord = async () => {
+    try {
+      const res = await audioRecorderPlayer.stopRecorder();
+      const fileContent = await RNFS.readFile(res, 'base64');
+      const fileInfo = await RNFS.stat(res);
+      const image = {
+        uri: fileInfo?.path,
+        type: 'audio/mpeg',
+        name: 'sound.mp3',
+      };
+      setLoading(true);
+      const _res = await post(endpoints.account.uploadImage, {image}, true);
+      if (_res) {
+        let newMessage = [
+          {
+            _id: uid(),
+            media: _res?.imageUrl,
+            text: '',
+            user: {
+              _id: userName._j,
+              name: userName._j,
+              avatar:
+                'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D',
+            },
+            createdAt: new Date(),
+          },
+        ];
+        onSend(newMessage);
+      }
+      audioRecorderPlayer.removeRecordBackListener();
+      setType(null);
+      setDuration(`00:00`);
+      setLoading(false);
+    } catch (e) {
+      audioRecorderPlayer.removeRecordBackListener();
+      setType(null);
+      setDuration(`00:00`);
+      console.log('Error', e);
+      setLoading(false);
+    }
   };
 
   const loadData = async () => {
     try {
       setLoading(true);
       const res = await fetch(
-        `http://192.168.2.7:4000/api/room/${roomId}/messages`,
+        `http://192.168.2.6:4000/api/room/${roomId}/messages`,
         {
           method: 'GET',
           headers: {
@@ -107,14 +142,14 @@ const Messages = ({route}) => {
   useEffect(() => {
     loadData();
     if (roomId) {
-      socket.emit('joinRoom', roomId);
+      socket.emit('joinRoom', roomId, () => {});
     }
     socket.on('roomMessage', newMessage => {
       setMessages(prevMessages =>
         GiftedChat.append(prevMessages, [newMessage]),
       );
     });
-  }, []);
+  }, [roomId]);
 
   const onSend = useCallback((newMessages = []) => {
     setMessages(prevMessages => GiftedChat.append(prevMessages, newMessages));
@@ -122,14 +157,14 @@ const Messages = ({route}) => {
     socket.emit('newMessage', {
       room_id: roomId,
       message: newMessages[0].text,
-      // You can replace this with actual user data
+      media: newMessages[0]?.media ? newMessages[0]?.media : null,
       user: {
         _id: userName._j,
         name: userName._j,
         avatar:
           'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D',
       },
-      createdAt: {hour: new Date().getHours(), mins: new Date().getMinutes()},
+      createdAt: new Date(),
     });
   }, []);
 
@@ -151,31 +186,110 @@ const Messages = ({route}) => {
 
   const renderBubble = props => {
     return (
-      <View
-        style={{
-          backgroundColor: 'white', // Background color of the message bubble
-          borderRadius: 10, // Border radius of the message bubble
-          padding: 10, // Padding inside the message bubble
-          maxWidth: '80%', // Maximum width of the message bubble
-        }}>
-        <Text style={{color: 'black'}}>{props.currentMessage.text}</Text>
+      <View>
+        <Bubble
+          {...props}
+          textStyle={{
+            left: styles.time,
+            right: styles.time,
+          }}
+          wrapperStyle={{
+            left: styles.wrapperStyle,
+            right: [styles.buble_view, {backgroundColor: 'red'}],
+          }}
+        />
       </View>
     );
   };
 
-  const renderCustomView = props => {
-    const {currentMessage} = props;
-    return console.log(currentMessage);
+  const renderCustomView = ({currentMessage}) => {
+    if (currentMessage.media) {
+      // Check if the message contains media (in this case audio)
+      return (
+        <View
+          style={{
+            width: vw * 60,
+            borderRadius: vw * 2,
+            paddingTop: vh,
+            paddingLeft: vw * 2,
+            justifyContent: 'center',
+            backgroundColor: '#fff',
+          }}>
+          {/* Render your custom view here */}
+          {/* You can access currentMessage.media and render the audio player */}
+          <TouchableOpacity
+            onPress={() => {
+              let allMessages = [...messages];
+              let index = allMessages?.findIndex(
+                item => item?._id == currentMessage?._id,
+              );
+              let audio;
+              setSelectedPlayerId(index);
+              console.log(allMessages);
+              if (allMessages.some(obj => obj.playing === true)) {
+                console.log('hey');
+                audio.stop();
+                audio.release;
+              }
+              if (!allMessages[index].playing) {
+                allMessages[index].playing = true;
+                setIsPlaying(true);
+                setMessages(allMessages);
+                audio = new Sound(
+                  allMessages[index]?.media,
+                  undefined,
+                  error => {
+                    if (error) {
+                      console.log(error);
+                    } else {
+                      audio.play(() => {
+                        setMessages(allMessages);
+                        setIsPlaying(false);
+                        audio.release();
+                      });
+                    }
+                    allMessages[index].playing = false;
+                  },
+                );
+              } else {
+              }
+              // allMessages[index].playing = !allMessages[index].playing;
+              // setMessages(allMessages);
+            }}
+            style={styles.playPaseContainer}>
+            <Ionicons
+              // name={currentMessage?.playing ? 'pause' : 'play' + '-outline'}
+              name={
+                isPlaying && currentMessage?.playing
+                  ? 'pause'
+                  : 'play' + '-outline'
+              }
+              size={25}
+              color={'black'}
+            />
+          </TouchableOpacity>
+        </View>
+      );
+    } else {
+      // If the message does not contain media, return null (no custom view)
+      return null;
+    }
   };
 
   return (
     <View style={styles.chatScreen}>
       <GiftedChat
-        renderUsernameOnMessage
         renderBubble={renderBubble}
         messages={messages}
         timeTextStyle={{left: {color: 'white'}, right: {color: 'blue'}}}
         renderActions={renderActions}
+        shouldUpdateMessage={(props, nextProps) => {
+          return props.currentMessage.playing ==
+            nextProps.currentMessage.playing
+            ? true
+            : false;
+        }}
+        renderCustomView={renderCustomView}
         onSend={newMessages => onSend(newMessages)}
         user={{
           _id: userName._j,
@@ -206,5 +320,15 @@ const styles = StyleSheet.create({
   chatScreen: {
     flex: 1,
     backgroundColor: '#6e8270', // Change this to the desired background color
+  },
+  wrapperStyle: {
+    backgroundColor: 'white',
+    borderRadius: vw * 2,
+  },
+  playPaseContainer: {
+    height: vh * 4,
+    width: vw * 10,
+    justifyContent: 'center',
+    alignContent: 'center',
   },
 });

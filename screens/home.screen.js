@@ -26,7 +26,7 @@ const Chats = ({navigation}) => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://192.168.2.7:4000/api', {
+      const res = await fetch('http://192.168.2.6:4000/api', {
         method: 'GET',
         headers: {
           Accept: 'application/json',

@@ -26,6 +26,7 @@ const socketIO = require('socket.io')(http, {
 });
 
 app.use(express.urlencoded({extended: true}));
+app.use('/uploads', express.static('uploads'));
 app.use(express.json());
 app.use(cors());
 
@@ -45,7 +46,7 @@ const messageSchema = new mongoose.Schema(
   {
     room_id: String,
     text: String,
-    Media: String,
+    media: String,
     user: {
       _id: String,
       name: String,
@@ -148,11 +149,12 @@ socketIO.on('connection', socket => {
   // });
 
   socket.on('newMessage', async data => {
-    const {room_id, message, user, createdAt} = data;
+    const {room_id, message, media, user, createdAt} = data;
 
     const newMessage = new Message({
       room_id,
       text: message,
+      media: media,
       user,
       createdAt: new Date(),
     });
