@@ -22,15 +22,15 @@ const Map = ({navigation, route}) => {
   const getLocation = () => {
     if (location) {
       setPosition({
-        lat: Number(location.latitude),
-        lng: Number(location.longitude),
+        lat: Number(location?.latitude),
+        lng: Number(location?.longitude),
       });
       setMarkerCoordinate({
-        latitude: Number(location.latitude),
-        longitude: Number(location.longitude),
+        latitude: Number(location?.latitude),
+        longitude: Number(location?.longitude),
       });
     } else {
-      Geolocation.getCurrentPosition(position => {
+      Geolocation?.getCurrentPosition(position => {
         setPosition({
           lat: position.coords.latitude,
           lng: position.coords.longitude,

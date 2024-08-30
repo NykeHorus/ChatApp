@@ -3,6 +3,7 @@ import React, {useState, useEffect} from 'react';
 import ChatList from '../components/Chat-screen.component';
 import socket from '../utitils/socket';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {base_url} from '../api/config';
 
 const Chats = ({navigation}) => {
   const [rooms, setRooms] = useState([]);
@@ -13,7 +14,7 @@ const Chats = ({navigation}) => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://192.168.2.8:4000/api', {
+      const res = await fetch(`${base_url}`, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -45,6 +46,7 @@ const Chats = ({navigation}) => {
     });
   }, [navigation]);
   // console.log(rooms[0]);
+  console.log(rooms);
 
   return (
     rooms.length > 0 && (

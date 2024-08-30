@@ -1,5 +1,7 @@
 import {io} from 'socket.io-client';
-const socket = io.connect('http://192.168.2.8:4000');
+import {socket_url} from '../api/config';
+
+const socket = io.connect(`${socket_url}`);
 export default socket;
 
 let instance = null;

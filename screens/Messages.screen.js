@@ -12,7 +12,7 @@ import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import RNFetchBlob from 'rn-fetch-blob';
 import RNFS from 'react-native-fs';
 import {post} from '../api/fetchHelpers';
-import {endpoints} from '../api/config';
+import {base_url, endpoints} from '../api/config';
 import Sound from 'react-native-sound';
 import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
@@ -116,17 +116,14 @@ const Messages = ({route, navigation}) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `http://192.168.2.8:4000/api/room/${roomId}/messages`,
-        {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/json',
-          },
+      const res = await fetch(`${base_url}/room/${roomId}/messages`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json',
         },
-      );
+      });
       let jsonRes = await res.json();
       // console.log(jsonRes);
       setMessages(jsonRes);
