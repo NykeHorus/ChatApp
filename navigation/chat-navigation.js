@@ -2,7 +2,7 @@ import React from 'react';
 import Chats from '../screens/home.screen';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Messages from '../screens/Messages.screen';
-import Modal from '../components/Modal';
+
 const ChatStack = createNativeStackNavigator();
 
 const ChatsNavigator = () => {
@@ -15,9 +15,6 @@ const ChatsNavigator = () => {
           component={Messages}
           options={({route}) => ({title: route.params.name})}
         />
-      </ChatStack.Group>
-      <ChatStack.Group screenOptions={{presentation: 'modal'}}>
-        <ChatStack.Screen name="New Chat" component={Modal} />
       </ChatStack.Group>
     </ChatStack.Navigator>
   );

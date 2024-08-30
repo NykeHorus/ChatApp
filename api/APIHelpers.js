@@ -166,17 +166,7 @@ export const getConfigs = (method, body, formData = true) => {
     headers['Content-Type'] = 'multipart/form-data';
     headers['redirect'] = 'follow';
   }
-  //   const data = store?.getState();
 
-  //   if (data) {
-  //     if (data?.auth) {
-  //       if (data?.auth?.token != null) {
-  //         if (data?.auth?.token) {
-  //           headers['Authorization'] = 'Bearer ' + data?.auth?.token;
-  //         }
-  //       }
-  //     }
-  //   }
   var configs = {
     method: method,
     headers: headers,

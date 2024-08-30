@@ -47,6 +47,12 @@ const messageSchema = new mongoose.Schema(
     room_id: String,
     text: String,
     media: String,
+    image: String,
+    doc: String,
+    location: {
+      latitude: String,
+      longitude: String,
+    },
     user: {
       _id: String,
       name: String,
@@ -149,12 +155,16 @@ socketIO.on('connection', socket => {
   // });
 
   socket.on('newMessage', async data => {
-    const {room_id, message, media, user, createdAt} = data;
+    const {room_id, message, media, user, image, doc, location} = data;
+    console.log('dataaaaaaaaaaaaa', data);
 
     const newMessage = new Message({
       room_id,
       text: message,
       media: media,
+      image: image,
+      doc: doc,
+      location: location,
       user,
       createdAt: new Date(),
     });
